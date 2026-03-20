@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MercadoIQ v3 — Tucumán</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0b0e16;--bg2:#10131c;--bg3:#161a26;--surface:#1c2030;--surface2:#222840;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#eaecf4;--muted:#6b7191;
+  --fb:#1877f2;--ml:#ffe600;--ig:#e1306c;
+  --green:#4ade80;--cyan:#22d3ee;--amber:#fbbf24;--red:#f87171;--purple:#a78bfa;--pink:#f472b6;--orange:#fb923c;
+  --font-d:'Syne',sans-serif;--font-b:'Inter',sans-serif;--font-m:'DM Mono',monospace;
+  --r:10px;--r2:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:14px;min-height:100vh;overflow-x:hidden;}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.main{overflow-y:auto;min-width:0;}
+
+/* SIDEBAR */
+.logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);}
+.logo-name{font-family:var(--font-d);font-weight:800;font-size:20px;letter-spacing:-.5px;background:linear-gradient(120deg,var(--fb),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-sub{font-size:9px;color:var(--muted);font-family:var(--font-m);letter-spacing:1.5px;margin-top:2px;}
+.logo-v{font-size:9px;color:var(--green);font-family:var(--font-m);margin-top:4px;}
+.nav{padding:8px 0;flex:1;}
+.nav-section{padding:10px 14px 3px;font-size:9px;color:var(--muted);font-family:var(--font-m);letter-spacing:1.8px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;color:var(--muted);font-size:12px;transition:all .15s;user-select:none;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.025);}
+.nav-item.active{color:var(--fb);border-left-color:var(--fb);background:rgba(24,119,242,.07);font-weight:500;}
+.nav-badge{margin-left:auto;font-size:9px;font-family:var(--font-m);background:rgba(74,222,128,.15);color:var(--green);padding:1px 5px;border-radius:3px;}
+.nav-badge.live{background:rgba(248,113,113,.15);color:var(--red);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* TICKER */
+.ticker-outer{background:var(--bg2);border-bottom:1px solid var(--border);padding:6px 0;overflow:hidden;}
+.ticker-track{display:flex;gap:28px;animation:ticker 35s linear infinite;width:max-content;}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tick{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:0 14px;font-family:var(--font-m);font-size:11px;}
+.tick-up{color:var(--green);}
+.tick-down{color:var(--red);}
+.tick-cat{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500;}
+
+/* VIEWS */
+.page-header{padding:20px 26px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.page-title{font-family:var(--font-d);font-size:21px;font-weight:700;letter-spacing:-.3px;}
+.page-sub{color:var(--muted);font-size:12px;margin-top:3px;}
+.view{display:none;padding:0 26px 36px;}
+.view.active{display:block;}
+
+/* CARDS */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px;}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.mc.c-fb::before{background:var(--fb);}
+.mc.c-green::before{background:var(--green);}
+.mc.c-amber::before{background:var(--amber);}
+.mc.c-purple::before{background:var(--purple);}
+.mc.c-cyan::before{background:var(--cyan);}
+.mc.c-red::before{background:var(--red);}
+.mc-label{font-size:9px;color:var(--muted);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px;}
+.mc-value{font-family:var(--font-d);font-size:22px;font-weight:700;margin-top:5px;line-height:1;}
+.mc-delta{font-size:11px;margin-top:4px;}
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-top:18px;}
+.tc-head{padding:13px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;}
+.tc-title{font-family:var(--font-d);font-weight:600;font-size:14px;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:8px 13px;text-align:left;font-size:9px;color:var(--muted);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:400;white-space:nowrap;}
+tbody tr{cursor:pointer;transition:background .1s;}
+tbody tr:hover{background:rgba(255,255,255,.025);}
+tbody td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-family:var(--font-m);font-weight:500;white-space:nowrap;}
+.b-green{background:rgba(74,222,128,.12);color:var(--green);}
+.b-amber{background:rgba(251,191,36,.12);color:var(--amber);}
+.b-red{background:rgba(248,113,113,.12);color:var(--red);}
+.b-blue{background:rgba(24,119,242,.15);color:var(--fb);}
+.b-purple{background:rgba(167,139,250,.12);color:var(--purple);}
+.b-pink{background:rgba(244,114,182,.12);color:var(--pink);}
+.b-cyan{background:rgba(34,211,238,.12);color:var(--cyan);}
+.b-orange{background:rgba(251,146,60,.12);color:var(--orange);}
+.b-ml{background:rgba(255,230,0,.12);color:#e0c800;}
+.b-ig{background:rgba(225,48,108,.12);color:var(--ig);}
+
+/* CANAL BADGES */
+.canal-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:9px;font-family:var(--font-m);font-weight:600;}
+.c-fb-tag{background:rgba(24,119,242,.18);color:var(--fb);}
+.c-ml-tag{background:rgba(255,230,0,.15);color:#c8aa00;}
+.c-ig-tag{background:rgba(225,48,108,.15);color:var(--ig);}
+
+/* MODO BADGE */
+.modo-tag{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:9px;font-family:var(--font-m);}
+.m-com{background:rgba(74,222,128,.1);color:var(--green);}
+.m-rev{background:rgba(34,211,238,.1);color:var(--cyan);}
+.m-drop{background:rgba(167,139,250,.1);color:var(--purple);}
+.m-int{background:rgba(251,191,36,.1);color:var(--amber);}
+
+/* DBAR */
+.dbar{display:flex;align-items:center;gap:6px;}
+.dbar-bg{height:4px;background:var(--bg3);border-radius:3px;flex:1;min-width:50px;}
+.dbar-fill{height:4px;border-radius:3px;}
+
+/* CHARTS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+.chart-grid3{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:18px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px;}
+.chart-title{font-family:var(--font-d);font-weight:600;font-size:13px;margin-bottom:12px;}
+.ch200{position:relative;height:200px;}
+.ch260{position:relative;height:260px;}
+
+/* HEATMAP */
+.hm-wrap{overflow-x:auto;padding:14px 18px 18px;}
+.hm-table{border-collapse:collapse;}
+.hm-cat-lbl{font-size:10px;color:var(--muted);padding-right:11px!important;white-space:nowrap;font-family:var(--font-m);vertical-align:middle;}
+.hm-month{font-size:9px;color:var(--muted);text-align:center;padding:0 2px 5px!important;font-family:var(--font-m);}
+.hm-cell{width:44px;height:32px;text-align:center;vertical-align:middle;font-size:10px;font-family:var(--font-m);font-weight:500;border-radius:4px;cursor:default;transition:transform .1s;}
+.hm-cell:hover{transform:scale(1.08);}
+
+/* CAT TABS */
+.cat-tabs{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap;}
+.ct{padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border2);color:var(--muted);transition:all .15s;background:transparent;}
+.ct:hover{color:var(--text);}
+.ct.ae{background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.35);color:var(--cyan);}
+.ct.ar{background:rgba(244,114,182,.1);border-color:rgba(244,114,182,.35);color:var(--pink);}
+.ct.ah{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.35);color:var(--amber);}
+.ct.aj{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.35);color:var(--purple);}
+.ct.am{background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.35);color:var(--cyan);}
+.ct.amq{background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.35);color:var(--orange);}
+.ct.ai{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--green);}
+.ct.aa{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:var(--text);}
+
+/* CALCULADORA */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-group{display:flex;flex-direction:column;gap:5px;}
+.field-label{font-size:9px;color:var(--muted);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px;}
+.field-input,.field-select{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--font-m);font-size:13px;outline:none;width:100%;transition:border-color .15s;}
+.field-input:focus,.field-select:focus{border-color:var(--fb);}
+.field-select option{background:var(--bg2);}
+.result-box{background:rgba(24,119,242,.06);border:1px solid rgba(24,119,242,.2);border-radius:var(--r);padding:16px;margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.ri label{font-size:9px;color:var(--muted);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px;display:block;}
+.ri .val{font-family:var(--font-d);font-size:20px;font-weight:700;margin-top:3px;}
+.stat-pair{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);}
+.stat-pair:last-child{border-bottom:none;}
+.sp-lbl{color:var(--muted);}
+.sp-val{font-family:var(--font-m);font-weight:500;}
+.strat-box{border-radius:var(--r);padding:11px 14px;font-size:12px;line-height:1.7;margin-top:10px;}
+
+/* AI CHAT */
+.ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-top:18px;}
+.ai-msgs{padding:14px;min-height:160px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:11px;}
+.msg{padding:9px 13px;border-radius:8px;font-size:13px;line-height:1.65;max-width:88%;}
+.msg.ai{background:var(--bg3);border:1px solid var(--border);align-self:flex-start;}
+.msg.user{background:rgba(24,119,242,.12);border:1px solid rgba(24,119,242,.25);align-self:flex-end;}
+.msg-lbl{font-size:9px;color:var(--muted);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.ai-input-row{padding:11px 14px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.ai-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color .15s;}
+.ai-input:focus{border-color:var(--fb);}
+.ai-input::placeholder{color:var(--muted);}
+.btn{background:var(--fb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:var(--font-d);font-weight:700;font-size:12px;cursor:pointer;transition:opacity .15s;}
+.btn:hover{opacity:.88;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer;transition:all .15s;}
+.btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.quick-btns{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+
+/* ML LIVE SEARCH */
+.ml-search-bar{display:flex;gap:8px;margin-top:14px;}
+.ml-search-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;transition:border-color .15s;}
+.ml-search-input:focus{border-color:#c8aa00;}
+.btn-ml{background:#ffe600;color:#111;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-d);font-weight:700;font-size:12px;cursor:pointer;transition:opacity .15s;}
+.btn-ml:hover{opacity:.85;}
+.ml-result-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;transition:all .15s;cursor:pointer;}
+.ml-result-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.ml-thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;background:var(--surface2);flex-shrink:0;}
+.ml-title{font-size:12px;font-weight:500;line-height:1.4;}
+.ml-price{font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--green);margin-top:3px;}
+.ml-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.loading-dots{display:flex;gap:4px;padding:4px 0;}
+.loading-dots span{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:blink 1.2s infinite;}
+.loading-dots span:nth-child(2){animation-delay:.2s;}
+.loading-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,60%,100%{opacity:.2}30%{opacity:1}}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);width:720px;max-width:96vw;max-height:92vh;overflow-y:auto;}
+.modal-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
+.modal-body{padding:18px 22px;}
+.close-btn{cursor:pointer;background:none;border:none;color:var(--muted);font-size:22px;line-height:1;}
+.close-btn:hover{color:var(--text);}
+
+/* SIDEBAR CATS */
+.sb-cats{padding:12px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.7;}
+.sb-cats-title{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;color:var(--muted);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* LARGE CAT SECTION */
+.large-cat-header{display:flex;align-items:center;gap:10px;padding:14px 0 8px;}
+.large-cat-icon{font-size:22px;}
+.large-cat-title{font-family:var(--font-d);font-weight:700;font-size:16px;}
+.large-cat-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;}
+.mode-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;text-align:center;}
+.mode-card .mode-icon{font-size:18px;margin-bottom:4px;}
+.mode-card .mode-name{font-size:11px;font-weight:600;font-family:var(--font-d);}
+.mode-card .mode-desc{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.mode-card .mode-earn{font-size:11px;font-family:var(--font-m);margin-top:4px;}
+
+/* ALERT BOX */
+.alert-box{border-radius:var(--r);padding:10px 14px;font-size:12px;line-height:1.7;display:flex;gap:10px;align-items:flex-start;margin-top:14px;}
+.alert-box.warn{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);}
+.alert-box.info{background:rgba(24,119,242,.06);border:1px solid rgba(24,119,242,.2);}
+.alert-box.success{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);}
+.alert-box.danger{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);}
+
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .metrics-row,.chart-grid,.chart-grid3{grid-template-columns:1fr;}
+  .calc-grid{grid-template-columns:1fr;}
+  .mode-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-name">MercadoIQ</div>
+    <div class="logo-sub">TUCUMÁN · ARG</div>
+    <div class="logo-v">v3 · API Mercado Libre Live</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Productos pequeños</div>
+    <div class="nav-item active" onclick="showView('demanda',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1 12L5 7l3 3 3-4 3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Demanda Estacional <span class="nav-badge">★1</span>
+    </div>
+    <div class="nav-item" onclick="showView('competencia',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M3 14c0-3 2-5 5-5s5 2 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Comparador Precios <span class="nav-badge">★2</span>
+    </div>
+    <div class="nav-item" onclick="showView('calculadora',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Calculadora ROI <span class="nav-badge">★3</span>
+    </div>
+    <div class="nav-item" onclick="showView('proveedores',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 3h12l-1.5 7H3.5L2 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      Dónde Comprar <span class="nav-badge">★4</span>
+    </div>
+
+    <div class="nav-section">Productos grandes</div>
+    <div class="nav-item" onclick="showView('movilidad',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="12" r="2" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M3 12H2V7l3-4h5l2 3h1.5a.5.5 0 01.5.5V10H10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Movilidad Eléctrica
+    </div>
+    <div class="nav-item" onclick="showView('maquinaria',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Maquinaria & Generadores
+    </div>
+    <div class="nav-item" onclick="showView('inmuebles',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1 14h14M2 14V7l6-5 6 5v7M6 14v-4h4v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Inmuebles
+    </div>
+
+    <div class="nav-section">Herramientas</div>
+    <div class="nav-item" onclick="showView('ml-live',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.3"/><path d="M9 9l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Búsqueda ML en Vivo <span class="nav-badge live">LIVE</span>
+    </div>
+    <div class="nav-item" onclick="showView('asistente',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M4 7h8M4 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Asesor IA
+    </div>
+  </nav>
+  <div class="sb-cats">
+    <div class="sb-cats-title">Tus categorías</div>
+    <div><span style="color:var(--cyan)">●</span> Electrónica</div>
+    <div><span style="color:var(--pink)">●</span> Ropa & Accesorios</div>
+    <div><span style="color:var(--amber)">●</span> Hogar & Deco</div>
+    <div><span style="color:var(--purple)">●</span> Juguetes & Bebés</div>
+    <div><span style="color:var(--cyan)">●</span> Movilidad Eléctrica</div>
+    <div><span style="color:var(--orange)">●</span> Maquinaria/Gen.</div>
+    <div><span style="color:var(--green)">●</span> Inmuebles</div>
+  </div>
+</aside>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main">
+
+<!-- TICKER -->
+<div class="ticker-outer">
+  <div class="ticker-track">
+    <div class="tick"><span class="tick-cat" style="background:rgba(34,211,238,.12);color:var(--cyan)">ELEC</span><span style="color:var(--muted)">Auriculares BT</span><span style="font-weight:500">$18.500</span><span class="tick-up">▲12%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(244,114,182,.12);color:var(--pink)">ROPA</span><span style="color:var(--muted)">Remera oversize</span><span style="font-weight:500">$8.200</span><span class="tick-up">▲7%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(251,191,36,.12);color:var(--amber)">HOGAR</span><span style="color:var(--muted)">Lámpara LED</span><span style="font-weight:500">$7.600</span><span class="tick-up">▲9%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(167,139,250,.12);color:var(--purple)">JUG</span><span style="color:var(--muted)">Mochila escolar</span><span style="font-weight:500">$22.000</span><span class="tick-up">▲34%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(34,211,238,.12);color:var(--cyan)">ELEC</span><span style="color:var(--muted)">Scooter eléctrico</span><span style="font-weight:500">$480.000</span><span class="tick-up">▲18%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(251,146,60,.12);color:var(--orange)">MÁQ</span><span style="color:var(--muted)">Generador 3000w</span><span style="font-weight:500">$620.000</span><span class="tick-up">▲22%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(74,222,128,.12);color:var(--green)">INM</span><span style="color:var(--muted)">Depto 2amb TUC</span><span style="font-weight:500">U$D 52.000</span><span class="tick-up">▲8%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(34,211,238,.12);color:var(--cyan)">ELEC</span><span style="color:var(--muted)">Bici eléctrica</span><span style="font-weight:500">$320.000</span><span class="tick-up">▲25%</span></div>
+    <!-- dup -->
+    <div class="tick"><span class="tick-cat" style="background:rgba(34,211,238,.12);color:var(--cyan)">ELEC</span><span style="color:var(--muted)">Auriculares BT</span><span style="font-weight:500">$18.500</span><span class="tick-up">▲12%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(244,114,182,.12);color:var(--pink)">ROPA</span><span style="color:var(--muted)">Remera oversize</span><span style="font-weight:500">$8.200</span><span class="tick-up">▲7%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(251,191,36,.12);color:var(--amber)">HOGAR</span><span style="color:var(--muted)">Lámpara LED</span><span style="font-weight:500">$7.600</span><span class="tick-up">▲9%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(167,139,250,.12);color:var(--purple)">JUG</span><span style="color:var(--muted)">Mochila escolar</span><span style="font-weight:500">$22.000</span><span class="tick-up">▲34%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(34,211,238,.12);color:var(--cyan)">ELEC</span><span style="color:var(--muted)">Scooter eléctrico</span><span style="font-weight:500">$480.000</span><span class="tick-up">▲18%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(251,146,60,.12);color:var(--orange)">MÁQ</span><span style="color:var(--muted)">Generador 3000w</span><span style="font-weight:500">$620.000</span><span class="tick-up">▲22%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(74,222,128,.12);color:var(--green)">INM</span><span style="color:var(--muted)">Depto 2amb TUC</span><span style="font-weight:500">U$D 52.000</span><span class="tick-up">▲8%</span></div>
+    <div class="tick"><span class="tick-cat" style="background:rgba(34,211,238,.12);color:var(--cyan)">ELEC</span><span style="color:var(--muted)">Bici eléctrica</span><span style="font-weight:500">$320.000</span><span class="tick-up">▲25%</span></div>
+  </div>
+</div>
+
+<!-- ════ VISTA: DEMANDA ESTACIONAL ════ -->
+<div id="view-demanda" class="view active">
+  <div class="page-header">
+    <div><div class="page-title">Demanda Estacional</div><div class="page-sub">Cuándo publicar · Qué vender esta semana · Todas las categorías · Marzo 2026</div></div>
+    <button class="btn-ghost" onclick="showView('ml-live',null)">Buscar en ML →</button>
+  </div>
+  <div class="alert-box warn" style="margin-top:14px;">
+    <span style="font-size:16px;flex-shrink:0;">📢</span>
+    <div><strong style="color:var(--amber)">Temporada activa — Marzo 2026:</strong> Back to school en pico (mochilas/útiles). Ropa de otoño empieza a rotar. Bebés: abrigo. Scooters/bicis eléctricas en alza pre-otoño. Generadores: demanda estable todo el año.</div>
+  </div>
+  <div class="cat-tabs">
+    <button class="ct aa" onclick="setCatD('all',this)">Todas</button>
+    <button class="ct" onclick="setCatD('elec',this)">⚡ Electrónica</button>
+    <button class="ct" onclick="setCatD('ropa',this)">👗 Ropa</button>
+    <button class="ct" onclick="setCatD('hogar',this)">🏠 Hogar</button>
+    <button class="ct" onclick="setCatD('juguetes',this)">🧸 Juguetes/Bebés</button>
+    <button class="ct" onclick="setCatD('movilidad',this)">🛵 Movilidad</button>
+    <button class="ct" onclick="setCatD('maquinaria',this)">⚙️ Maquinaria</button>
+    <button class="ct" onclick="setCatD('inmuebles',this)">🏢 Inmuebles</button>
+  </div>
+  <div class="tc">
+    <div class="tc-head">
+      <div class="tc-title">Mapa de Calor — Demanda Mensual por Categoría (0–100)</div>
+      <div style="display:flex;gap:8px;font-size:10px;color:var(--muted);">
+        <span>⬛ Baja</span><span style="color:var(--green)">▪ Media</span><span style="color:var(--green)">■ Alta</span>
+      </div>
+    </div>
+    <div class="hm-wrap" id="heatmap-main"></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title" id="weekly-title">Tendencia Semanal — Todas las categorías</div>
+      <div class="ch260"><canvas id="chart-weekly"></canvas></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="chart-card">
+        <div class="chart-title">Mejores días FB/ML para publicar</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px;font-size:9px;text-align:center;color:var(--muted);font-family:var(--font-m);">
+          <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;" id="day-heat"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;font-family:var(--font-m);line-height:1.5;">📍 Pico FB/ML: Jue–Vie 20–23h · Dom 10–13h</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Horario de mayor actividad</div>
+        <div style="display:flex;flex-direction:column;gap:5px;" id="time-bars"></div>
+      </div>
+    </div>
+  </div>
+  <div class="tc">
+    <div class="tc-head">
+      <div class="tc-title">🔥 Qué publicar esta semana — 17-23 Mar 2026</div>
+      <span class="badge b-green">Score 0–100</span>
+    </div>
+    <table>
+      <thead><tr><th>Producto</th><th>Categoría</th><th>Canal ideal</th><th>Modo operación</th><th>Score</th><th>Tendencia</th><th>Compra</th><th>Venta</th><th>Margen</th><th></th></tr></thead>
+      <tbody>
+        <tr onclick="openModal('mochila')"><td><strong>Mochila Escolar</strong></td><td><span class="badge b-purple">🧸 B2School</span></td><td><span class="canal-tag c-fb-tag">FB</span> <span class="canal-tag c-ml-tag">ML</span></td><td><span class="modo-tag m-rev">Revendedor</span></td><td><div class="dbar"><div class="dbar-bg"><div class="dbar-fill" style="width:95%;background:var(--green)"></div></div><strong style="font-family:var(--font-m);font-size:10px;color:var(--green)">95</strong></div></td><td><span style="color:var(--green);font-family:var(--font-m);font-size:11px">▲+34%</span></td><td style="font-family:var(--font-m)">$9.000</td><td style="font-family:var(--font-m);color:var(--green)">$22.000</td><td><span class="badge b-green">59%</span></td><td><button class="btn-ghost">Ver →</button></td></tr>
+        <tr onclick="openModal('scooter')"><td><strong>Scooter Eléctrico</strong></td><td><span class="badge b-cyan">🛵 Movilidad</span></td><td><span class="canal-tag c-ml-tag">ML</span> <span class="canal-tag c-fb-tag">FB</span></td><td><span class="modo-tag m-com">Comisionista</span></td><td><div class="dbar"><div class="dbar-bg"><div class="dbar-fill" style="width:88%;background:var(--cyan)"></div></div><strong style="font-family:var(--font-m);font-size:10px;color:var(--cyan)">88</strong></div></td><td><span style="color:var(--green);font-family:var(--font-m);font-size:11px">▲+25%</span></td><td style="font-family:var(--font-m)">$290.000</td><td style="font-family:var(--font-m);color:var(--green)">$480.000</td><td><span class="badge b-green">39%</span></td><td><button class="btn-ghost">Ver →</button></td></tr>
+        <tr onclick="openModal('generador')"><td><strong>Generador 3000W</strong></td><td><span class="badge b-orange">⚙️ Maquinaria</span></td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="modo-tag m-com">Comisionista</span></td><td><div class="dbar"><div class="dbar-bg"><div class="dbar-fill" style="width:84%;background:var(--orange)"></div></div><strong style="font-family:var(--font-m);font-size:10px;color:var(--orange)">84</strong></div></td><td><span style="color:var(--green);font-family:var(--font-m);font-size:11px">▲+22%</span></td><td style="font-family:var(--font-m)">$420.000</td><td style="font-family:var(--font-m);color:var(--green)">$620.000</td><td><span class="badge b-green">32%</span></td><td><button class="btn-ghost">Ver →</button></td></tr>
+        <tr onclick="openModal('auriculares')"><td><strong>Auriculares BT</strong></td><td><span class="badge b-cyan">⚡ Electrónica</span></td><td><span class="canal-tag c-fb-tag">FB</span> <span class="canal-tag c-ml-tag">ML</span></td><td><span class="modo-tag m-rev">Revendedor</span></td><td><div class="dbar"><div class="dbar-bg"><div class="dbar-fill" style="width:82%;background:var(--cyan)"></div></div><strong style="font-family:var(--font-m);font-size:10px;color:var(--cyan)">82</strong></div></td><td><span style="color:var(--green);font-family:var(--font-m);font-size:11px">▲+12%</span></td><td style="font-family:var(--font-m)">$8.500</td><td style="font-family:var(--font-m);color:var(--green)">$18.500</td><td><span class="badge b-green">54%</span></td><td><button class="btn-ghost">Ver →</button></td></tr>
+        <tr onclick="openModal('depto')"><td><strong>Depto 2 amb. TUC</strong></td><td><span class="badge b-green">🏢 Inmuebles</span></td><td><span class="canal-tag c-fb-tag">FB</span></td><td><span class="modo-tag m-int">Intermediario</span></td><td><div class="dbar"><div class="dbar-bg"><div class="dbar-fill" style="width:76%;background:var(--green)"></div></div><strong style="font-family:var(--font-m);font-size:10px;color:var(--green)">76</strong></div></td><td><span style="color:var(--green);font-family:var(--font-m);font-size:11px">▲+8%</span></td><td style="font-family:var(--font-m)">—</td><td style="font-family:var(--font-m);color:var(--green)">3–5% comis.</td><td><span class="badge b-green">100%</span></td><td><button class="btn-ghost">Ver →</button></td></tr>
+        <tr onclick="openModal('lampara')"><td><strong>Lámpara LED Mesa</strong></td><td><span class="badge b-amber">🏠 Hogar</span></td><td><span class="canal-tag c-fb-tag">FB</span></td><td><span class="modo-tag m-drop">Dropshipping</span></td><td><div class="dbar"><div class="dbar-bg"><div class="dbar-fill" style="width:74%;background:var(--amber)"></div></div><strong style="font-family:var(--font-m);font-size:10px;color:var(--amber)">74</strong></div></td><td><span style="color:var(--green);font-family:var(--font-m);font-size:11px">▲+9%</span></td><td style="font-family:var(--font-m)">$3.800</td><td style="font-family:var(--font-m);color:var(--green)">$7.600</td><td><span class="badge b-green">50%</span></td><td><button class="btn-ghost">Ver →</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════ VISTA: COMPARADOR ════ -->
+<div id="view-competencia" class="view">
+  <div class="page-header"><div><div class="page-title">Comparador de Precios</div><div class="page-sub">Mercado actual · Canal recomendado · Estrategia de posicionamiento</div></div></div>
+  <div class="cat-tabs">
+    <button class="ct ae" onclick="setCompCat('elec',this)">⚡ Electrónica</button>
+    <button class="ct" onclick="setCompCat('ropa',this)">👗 Ropa</button>
+    <button class="ct" onclick="setCompCat('hogar',this)">🏠 Hogar</button>
+    <button class="ct" onclick="setCompCat('juguetes',this)">🧸 Juguetes</button>
+    <button class="ct" onclick="setCompCat('movilidad',this)">🛵 Movilidad</button>
+    <button class="ct" onclick="setCompCat('maquinaria',this)">⚙️ Maquinaria</button>
+  </div>
+  <div class="chart-grid3" style="margin-top:14px;">
+    <div class="tc" style="margin-top:0;">
+      <div class="tc-head"><div class="tc-title" id="comp-title">Auriculares BT</div><span id="comp-canal-badges"></span></div>
+      <div style="padding:14px;" id="comp-list"></div>
+      <div style="padding:0 14px 14px;" id="comp-strategy"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="chart-card"><div class="chart-title">Distribución de precios</div><div class="ch200"><canvas id="chart-comp"></canvas></div></div>
+      <div class="chart-card">
+        <div class="chart-title">Saturación por categoría</div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-top:2px;">
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span>⚡ Electrónica</span><span style="font-family:var(--font-m);color:var(--amber)">55%</span></div><div class="dbar-bg"><div class="dbar-fill" style="width:55%;background:var(--amber)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span>👗 Ropa</span><span style="font-family:var(--font-m);color:var(--red)">78%</span></div><div class="dbar-bg"><div class="dbar-fill" style="width:78%;background:var(--red)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span>🏠 Hogar</span><span style="font-family:var(--font-m);color:var(--green)">30%</span></div><div class="dbar-bg"><div class="dbar-fill" style="width:30%;background:var(--green)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span>🧸 Juguetes</span><span style="font-family:var(--font-m);color:var(--green)">42%</span></div><div class="dbar-bg"><div class="dbar-fill" style="width:42%;background:var(--green)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span>🛵 Movilidad</span><span style="font-family:var(--font-m);color:var(--green)">28%</span></div><div class="dbar-bg"><div class="dbar-fill" style="width:28%;background:var(--green)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span>⚙️ Maquinaria</span><span style="font-family:var(--font-m);color:var(--green)">22%</span></div><div class="dbar-bg"><div class="dbar-fill" style="width:22%;background:var(--green)"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ VISTA: CALCULADORA ════ -->
+<div id="view-calculadora" class="view">
+  <div class="page-header"><div><div class="page-title">Calculadora de Rentabilidad</div><div class="page-sub">FB = 0% comisión · ML = 6–13% según cat. · Comisionista = costo $0</div></div></div>
+  <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+    <div class="tc" style="margin-top:0;">
+      <div class="tc-head"><div class="tc-title">Parámetros</div></div>
+      <div style="padding:18px;">
+        <div style="margin-bottom:14px;">
+          <div class="field-label" style="display:block;margin-bottom:7px;">Preset rápido</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="btn-ghost" style="font-size:10px;" onclick="loadPreset('auriculares')">⚡ Auriculares</button>
+            <button class="btn-ghost" style="font-size:10px;" onclick="loadPreset('mochila')">🧸 Mochila</button>
+            <button class="btn-ghost" style="font-size:10px;" onclick="loadPreset('scooter')">🛵 Scooter</button>
+            <button class="btn-ghost" style="font-size:10px;" onclick="loadPreset('generador')">⚙️ Generador</button>
+            <button class="btn-ghost" style="font-size:10px;" onclick="loadPreset('inmueble')">🏢 Inmueble</button>
+          </div>
+        </div>
+        <div class="calc-grid">
+          <div class="field-group"><label class="field-label">Precio de compra ($)</label><input class="field-input" id="c-costo" type="number" value="8500" oninput="calcular()"></div>
+          <div class="field-group"><label class="field-label">Precio de venta ($)</label><input class="field-input" id="c-venta" type="number" value="18500" oninput="calcular()"></div>
+          <div class="field-group">
+            <label class="field-label">Canal de venta</label>
+            <select class="field-select" id="c-canal" onchange="calcular()">
+              <option value="0">Facebook Marketplace (0%)</option>
+              <option value="6">Mercado Libre — Electrónica (6%)</option>
+              <option value="9">Mercado Libre — Hogar (9%)</option>
+              <option value="13">Mercado Libre — Ropa (13%)</option>
+              <option value="0">Comisionista / Intermediario (0%)</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Modo operación</label>
+            <select class="field-select" id="c-modo" onchange="calcular()">
+              <option value="rev">Comprador-Revendedor</option>
+              <option value="com">Comisionista (% sobre venta)</option>
+              <option value="drop">Dropshipping</option>
+              <option value="int">Intermediario</option>
+            </select>
+          </div>
+          <div class="field-group"><label class="field-label">Envío / logística ($)</label><input class="field-input" id="c-envio" type="number" value="0" oninput="calcular()"></div>
+          <div class="field-group"><label class="field-label">Comisión de venta (%)</label><input class="field-input" id="c-comision-pct" type="number" value="5" oninput="calcular()"></div>
+          <div class="field-group"><label class="field-label">Otros costos ($)</label><input class="field-input" id="c-otros" type="number" value="150" oninput="calcular()"></div>
+          <div class="field-group"><label class="field-label">Unidades proyectadas</label><input class="field-input" id="c-unidades" type="number" value="1" oninput="calcular()"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="tc" style="margin-top:0;">
+        <div class="tc-head"><div class="tc-title">Resultado</div><span id="r-modo-badge"></span></div>
+        <div style="padding:16px;">
+          <div class="result-box">
+            <div class="ri"><label>Ganancia neta</label><div class="val" id="r-ganancia">$10.150</div></div>
+            <div class="ri"><label>Margen</label><div class="val" id="r-margen">55%</div></div>
+            <div class="ri"><label>ROI</label><div class="val" id="r-roi">119%</div></div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="stat-pair"><span class="sp-lbl">Costo total</span><span class="sp-val" id="r-costo-total">$8.650</span></div>
+            <div class="stat-pair"><span class="sp-lbl">Comisión canal</span><span class="sp-val" id="r-comision-canal">$0</span></div>
+            <div class="stat-pair"><span class="sp-lbl">Break-even</span><span class="sp-val" id="r-break">$8.650</span></div>
+            <div class="stat-pair"><span class="sp-lbl">x 1 venta</span><span class="sp-val" id="r-x1">$10.150</span></div>
+            <div class="stat-pair"><span class="sp-lbl">x 5 ventas</span><span class="sp-val" id="r-x5" style="color:var(--green)">$50.750</span></div>
+            <div class="stat-pair"><span class="sp-lbl">x 10 ventas</span><span class="sp-val" id="r-x10" style="color:var(--green)">$101.500</span></div>
+          </div>
+          <div id="r-semaforo" style="margin-top:10px;"></div>
+        </div>
+      </div>
+      <div class="chart-card"><div class="chart-title">Proyección 1–10 ventas</div><div class="ch200"><canvas id="chart-sim"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ VISTA: PROVEEDORES ════ -->
+<div id="view-proveedores" class="view">
+  <div class="page-header"><div><div class="page-title">Dónde Comprar</div><div class="page-sub">Fuentes por categoría · Desde 1 unidad · Sin capital inicial</div></div></div>
+  <div class="alert-box info" style="margin-top:14px;"><span style="font-size:15px;flex-shrink:0;">💡</span><div><strong style="color:var(--fb)">Sin capital:</strong> Publicá → seña 50% → comprás → entregás → cobrás el resto. Funciona en todas las categorías pequeñas y también en movilidad eléctrica con dropshipping local.</div></div>
+  <div class="tc" style="margin-top:16px;"><div class="tc-head"><div class="tc-title"><span style="color:var(--cyan)">⚡</span> Electrónica & Hogar</div></div><div style="padding:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🏪</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Once / Flores (CABA)</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Electrónica, hogar, accesorios. Desde 1 unidad. Viaje ~$8.000 redondo.</div><div style="margin-top:6px"><span class="badge b-green">1 unidad</span></div></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🛒</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">ML Mayoristas online</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">20–30% más barato. Llega a TUC en 2d. Sin viaje. Buscá "mayorista" en cada categoría.</div><div style="margin-top:6px"><span class="badge b-blue">Sin viaje</span></div></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">📱</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Importadores Tucumán</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Av. Mate de Luna y San Martín. Accesorios, cargadores, electrónica. Negociá en persona.</div><div style="margin-top:6px"><span class="badge b-green">Inmediato</span></div></div>
+  </div></div>
+  <div class="tc"><div class="tc-head"><div class="tc-title"><span style="color:var(--cyan)">🛵</span> Movilidad Eléctrica</div></div><div style="padding:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🏭</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Importadores directos</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Scooters y bicis desde $180.000. Marcas: Kugoo, Xiaomi, Makalu. ML · 30–45d de entrega.</div><div style="margin-top:6px"><span class="badge b-cyan">Margen 40–65%</span></div></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🤝</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Concesionarios TUC</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Motos eléctricas de stock local. Ideal para comisionista: conseguís comprador y llevás tu %. Sin inversión.</div><div style="margin-top:6px"><span class="badge b-green">Comisión 5–8%</span></div></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🌐</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Dropshipping nacional</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Grupos FB "proveedores dropshipping movilidad eléctrica". Publicás vos, ellos envían, cobrás diferencia.</div><div style="margin-top:6px"><span class="badge b-purple">Sin stock</span></div></div>
+  </div></div>
+  <div class="tc"><div class="tc-head"><div class="tc-title"><span style="color:var(--orange)">⚙️</span> Maquinaria & Generadores</div></div><div style="padding:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🏪</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Distribuidores nacionales</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Generadores Veltri, Gamma, Bauker. Compra directa con factura. Precio distribución = 25–35% menos.</div><div style="margin-top:6px"><span class="badge b-orange">Margen 30–40%</span></div></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🤝</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Intermediario / comisionista</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Publicás en ML o FB. Contactás al comprador con el proveedor. Te quedás 5–10% de comisión. Inversión $0.</div><div style="margin-top:6px"><span class="badge b-green">Sin capital</span></div></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;"><div style="font-size:20px;margin-bottom:5px">🔧</div><div style="font-weight:600;font-family:var(--font-d);font-size:13px">Ferreterías / depósitos TUC</div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Generadores pequeños 1500W desde $280.000. Zona industrial de Tucumán. Compra directa.</div><div style="margin-top:6px"><span class="badge b-amber">Stock local</span></div></div>
+  </div></div>
+</div>
+
+<!-- ════ VISTA: MOVILIDAD ELÉCTRICA ════ -->
+<div id="view-movilidad" class="view">
+  <div class="page-header"><div><div class="page-title">Movilidad Eléctrica</div><div class="page-sub">Bicis · Scooters · Motos eléctricas · Análisis de mercado y operación</div></div><button class="btn-ghost" onclick="searchML('scooter electrico',this)">Ver precios ML Live →</button></div>
+
+  <div class="metrics-row" style="grid-template-columns:repeat(4,1fr);">
+    <div class="mc c-green"><div class="mc-label">Demanda actual</div><div class="mc-value" style="color:var(--green)">Alta</div><div class="mc-delta" style="color:var(--green)">▲+25% vs 2025</div></div>
+    <div class="mc c-cyan"><div class="mc-label">Ticket promedio</div><div class="mc-value" style="color:var(--cyan)">$380K</div><div class="mc-delta" style="color:var(--muted)">Scooter gama media</div></div>
+    <div class="mc c-amber"><div class="mc-label">Margen reventa</div><div class="mc-value" style="color:var(--amber)">35–65%</div><div class="mc-delta" style="color:var(--muted)">Según modelo y canal</div></div>
+    <div class="mc c-purple"><div class="mc-label">Saturación</div><div class="mc-value" style="color:var(--green)">Baja</div><div class="mc-delta" style="color:var(--green)">28% — oportunidad</div></div>
+  </div>
+
+  <div class="alert-box success"><span style="font-size:15px;flex-shrink:0;">✅</span><div><strong style="color:var(--green)">Oportunidad de mercado 2026:</strong> La movilidad eléctrica crece fuerte en Argentina por el costo del combustible. Tucumán tiene poca oferta local. Los compradores buscan en ML y FB pero compran localmente si pueden retirar en persona.</div></div>
+
+  <div class="mode-grid">
+    <div class="mode-card"><div class="mode-icon">💼</div><div class="mode-name">Comisionista</div><div class="mode-desc">Publicás, conseguís comprador, conectás con concesionario. Cobras comisión.</div><div class="mode-earn" style="color:var(--green)">$15.000–$38.400 por venta</div></div>
+    <div class="mode-card"><div class="mode-icon">🔄</div><div class="mode-name">Revendedor</div><div class="mode-desc">Comprás al importador/distribuidor y revendés. Requiere capital inicial.</div><div class="mode-earn" style="color:var(--cyan)">$95K–$190K por venta</div></div>
+    <div class="mode-card"><div class="mode-icon">📦</div><div class="mode-name">Dropshipping</div><div class="mode-desc">Publicás. El proveedor envía directamente al comprador. Vos cobrás la diferencia.</div><div class="mode-earn" style="color:var(--purple)">$30K–$90K por venta</div></div>
+    <div class="mode-card"><div class="mode-icon">🤝</div><div class="mode-name">Intermediario</div><div class="mode-desc">Conectás vendedor particular con comprador particular. Cobrás % de cada parte.</div><div class="mode-earn" style="color:var(--amber)">$10K–$25K por operación</div></div>
+  </div>
+
+  <div class="tc"><div class="tc-head"><div class="tc-title">Productos recomendados — Movilidad Eléctrica</div><div style="display:flex;gap:6px;"><span class="canal-tag c-ml-tag">ML</span><span class="canal-tag c-fb-tag">FB</span></div></div>
+  <table><thead><tr><th>Producto</th><th>Modo ideal</th><th>Compra</th><th>Venta</th><th>Ganancia</th><th>Canal</th><th>Dificultad</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Scooter 350W gama entrada</strong></td><td><span class="modo-tag m-drop">Dropshipping</span></td><td style="font-family:var(--font-m)">$220.000</td><td style="font-family:var(--font-m);color:var(--green)">$320.000</td><td style="font-family:var(--font-m);color:var(--green)">$100.000</td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-green">Fácil</span></td></tr>
+    <tr><td><strong>Scooter 500W premium</strong></td><td><span class="modo-tag m-com">Comisionista</span></td><td style="font-family:var(--font-m)">—</td><td style="font-family:var(--font-m);color:var(--green)">$480.000</td><td style="font-family:var(--font-m);color:var(--green)">$24.000 (5%)</td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-green">Muy fácil</span></td></tr>
+    <tr><td><strong>Bici eléctrica urbana</strong></td><td><span class="modo-tag m-rev">Revendedor</span></td><td style="font-family:var(--font-m)">$180.000</td><td style="font-family:var(--font-m);color:var(--green)">$290.000</td><td style="font-family:var(--font-m);color:var(--green)">$110.000</td><td><span class="canal-tag c-fb-tag">FB</span> <span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-amber">Media</span></td></tr>
+    <tr><td><strong>Moto eléctrica 1200W</strong></td><td><span class="modo-tag m-com">Comisionista</span></td><td style="font-family:var(--font-m)">—</td><td style="font-family:var(--font-m);color:var(--green)">$850.000</td><td style="font-family:var(--font-m);color:var(--green)">$42.500 (5%)</td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-amber">Media</span></td></tr>
+    <tr><td><strong>Monopatin eléctrico</strong></td><td><span class="modo-tag m-drop">Dropshipping</span></td><td style="font-family:var(--font-m)">$85.000</td><td style="font-family:var(--font-m);color:var(--green)">$150.000</td><td style="font-family:var(--font-m);color:var(--green)">$65.000</td><td><span class="canal-tag c-fb-tag">FB</span></td><td><span class="badge b-green">Fácil</span></td></tr>
+  </tbody></table></div>
+
+  <div class="alert-box info" style="margin-top:14px;"><span style="font-size:15px;flex-shrink:0;">📍</span><div><strong style="color:var(--fb)">Estrategia recomendada para empezar:</strong> Publicá como comisionista en ML. Buscá scooters en concesionarias de Tucumán y acordá una comisión del 5%. Publicalo vos en ML con buenas fotos. Cuando te consultan, los ponés en contacto directo con el vendedor y cobrás tu %. Inversión: $0.</div></div>
+</div>
+
+<!-- ════ VISTA: MAQUINARIA ════ -->
+<div id="view-maquinaria" class="view">
+  <div class="page-header"><div><div class="page-title">Maquinaria & Generadores</div><div class="page-sub">Generadores · Herramientas · Equipos industriales · Alta ganancia por operación</div></div><button class="btn-ghost" onclick="searchML('generador electrico',this)">Ver precios ML Live →</button></div>
+
+  <div class="metrics-row" style="grid-template-columns:repeat(4,1fr);">
+    <div class="mc c-green"><div class="mc-label">Saturación</div><div class="mc-value" style="color:var(--green)">22%</div><div class="mc-delta" style="color:var(--green)">Muy baja</div></div>
+    <div class="mc c-orange"><div class="mc-label">Ticket promedio</div><div class="mc-value" style="color:var(--orange)">$620K</div><div class="mc-delta" style="color:var(--muted)">Generador 3000W</div></div>
+    <div class="mc c-amber"><div class="mc-label">Margen comisionista</div><div class="mc-value" style="color:var(--amber)">5–10%</div><div class="mc-delta" style="color:var(--muted)">$31K–$62K por venta</div></div>
+    <div class="mc c-cyan"><div class="mc-label">Margen revendedor</div><div class="mc-value" style="color:var(--cyan)">30–40%</div><div class="mc-delta" style="color:var(--muted)">$186K–$248K por venta</div></div>
+  </div>
+
+  <div class="mode-grid">
+    <div class="mode-card"><div class="mode-icon">💼</div><div class="mode-name">Comisionista</div><div class="mode-desc">Publicás en ML, conseguís comprador, conectás con distribuidor. Sin inversión.</div><div class="mode-earn" style="color:var(--green)">$31.000–$62.000 por venta</div></div>
+    <div class="mode-card"><div class="mode-icon">🔄</div><div class="mode-name">Revendedor</div><div class="mode-desc">Comprás al distribuidor o ferreterías mayoristas. Revendés en ML o directo.</div><div class="mode-earn" style="color:var(--cyan)">$186K–$250K por venta</div></div>
+    <div class="mode-card"><div class="mode-icon">📦</div><div class="mode-name">Dropshipping</div><div class="mode-desc">Acordás con distribuidores. Ellos despachan, vos cobrás diferencia de precio.</div><div class="mode-earn" style="color:var(--purple)">$50K–$100K por venta</div></div>
+    <div class="mode-card"><div class="mode-icon">🏗️</div><div class="mode-name">B2B / Empresas</div><div class="mode-desc">Vendés a constructoras, pymes y comercios. Tickets de $2M–$10M por lote.</div><div class="mode-earn" style="color:var(--amber)">10% comisión sobre lote</div></div>
+  </div>
+
+  <div class="tc"><div class="tc-head"><div class="tc-title">Productos con mayor demanda — Maquinaria & Generadores</div></div>
+  <table><thead><tr><th>Producto</th><th>Modo ideal</th><th>Compra</th><th>Venta</th><th>Ganancia est.</th><th>Canal</th><th>Oportunidad</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Generador 3000W naftero</strong></td><td><span class="modo-tag m-com">Comisionista</span></td><td style="font-family:var(--font-m)">—</td><td style="font-family:var(--font-m);color:var(--green)">$620.000</td><td style="font-family:var(--font-m);color:var(--green)">$37.200 (6%)</td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-green">🔥 Alta</span></td></tr>
+    <tr><td><strong>Generador 6500W trifásico</strong></td><td><span class="modo-tag m-com">Comisionista</span></td><td style="font-family:var(--font-m)">—</td><td style="font-family:var(--font-m);color:var(--green)">$1.400.000</td><td style="font-family:var(--font-m);color:var(--green)">$84.000 (6%)</td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-green">Alta</span></td></tr>
+    <tr><td><strong>Motosierra profesional</strong></td><td><span class="modo-tag m-rev">Revendedor</span></td><td style="font-family:var(--font-m)">$180.000</td><td style="font-family:var(--font-m);color:var(--green)">$280.000</td><td style="font-family:var(--font-m);color:var(--green)">$100.000</td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-amber">Media</span></td></tr>
+    <tr><td><strong>Soldadora inverter</strong></td><td><span class="modo-tag m-drop">Dropshipping</span></td><td style="font-family:var(--font-m)">$95.000</td><td style="font-family:var(--font-m);color:var(--green)">$160.000</td><td style="font-family:var(--font-m);color:var(--green)">$65.000</td><td><span class="canal-tag c-ml-tag">ML</span> <span class="canal-tag c-fb-tag">FB</span></td><td><span class="badge b-green">Alta</span></td></tr>
+    <tr><td><strong>Compresor 100L</strong></td><td><span class="modo-tag m-com">Comisionista</span></td><td style="font-family:var(--font-m)">—</td><td style="font-family:var(--font-m);color:var(--green)">$480.000</td><td style="font-family:var(--font-m);color:var(--green)">$28.800 (6%)</td><td><span class="canal-tag c-ml-tag">ML</span></td><td><span class="badge b-green">Alta</span></td></tr>
+  </tbody></table></div>
+
+  <div class="alert-box success" style="margin-top:14px;"><span style="font-size:15px;flex-shrink:0;">⚙️</span><div><strong style="color:var(--green)">Canal ideal: Mercado Libre.</strong> Los compradores de maquinaria buscan en ML, no en FB. Publicar como "Full" en ML da más exposición. La comisión de ML (6%) ya está incluida en tu precio de venta cuando calculás.</div></div>
+</div>
+
+<!-- ════ VISTA: INMUEBLES ════ -->
+<div id="view-inmuebles" class="view">
+  <div class="page-header"><div><div class="page-title">Inmuebles</div><div class="page-sub">Propiedades en Tucumán · Alquiler · Venta · Intermediación sin capital</div></div></div>
+
+  <div class="metrics-row" style="grid-template-columns:repeat(4,1fr);">
+    <div class="mc c-green"><div class="mc-label">Comisión venta</div><div class="mc-value" style="color:var(--green)">3–5%</div><div class="mc-delta" style="color:var(--green)">$1.500–$3.500 USD por op.</div></div>
+    <div class="mc c-amber"><div class="mc-label">Comisión alquiler</div><div class="mc-value" style="color:var(--amber)">1 mes</div><div class="mc-delta" style="color:var(--muted)">$150K–$400K por contrato</div></div>
+    <div class="mc c-purple"><div class="mc-label">Inversión necesaria</div><div class="mc-value" style="color:var(--purple)">$0</div><div class="mc-delta" style="color:var(--muted)">Puro intermediario</div></div>
+    <div class="mc c-cyan"><div class="mc-label">Mercado TUC</div><div class="mc-value" style="color:var(--cyan)">Activo</div><div class="mc-delta" style="color:var(--green)">Demanda en alza</div></div>
+  </div>
+
+  <div class="alert-box warn"><span style="font-size:15px;flex-shrink:0;">⚠️</span><div><strong style="color:var(--amber)">Importante:</strong> Para cobrar comisión de inmuebles en Argentina técnicamente se requiere matrícula de corredor inmobiliario. Sin matrícula podés actuar como "acercador" y acordar un honorario informal con el propietario. Para volumen mayor, conviene asociarte con una inmobiliaria que te dé un %. Consultá un profesional local.</div></div>
+
+  <div class="mode-grid">
+    <div class="mode-card"><div class="mode-icon">📢</div><div class="mode-name">Acercador</div><div class="mode-desc">Conseguís el contacto entre propietario y comprador/inquilino. El propietario te paga un "bono".</div><div class="mode-earn" style="color:var(--green)">$50K–$200K por operación</div></div>
+    <div class="mode-card"><div class="mode-icon">🤝</div><div class="mode-name">Asociado inmobiliaria</div><div class="mode-desc">Acordás con inmobiliaria local. Vos traés el cliente, ellos cierran. Se reparten la comisión.</div><div class="mode-earn" style="color:var(--cyan)">40–50% de la comisión</div></div>
+    <div class="mode-card"><div class="mode-icon">📱</div><div class="mode-name">Difusión FB/IG</div><div class="mode-desc">Publicás propiedades en FB y grupos de TUC. Generás consultas para la inmobiliaria. Cobrás por lead.</div><div class="mode-earn" style="color:var(--amber)">$30K–$80K por lead calificado</div></div>
+    <div class="mode-card"><div class="mode-icon">🔑</div><div class="mode-name">Alquileres temporarios</div><div class="mode-desc">Gestionás el Airbnb/FB de propietarios. Cobrás un % de cada noche o fee mensual fijo.</div><div class="mode-earn" style="color:var(--purple)">10–20% de la renta</div></div>
+  </div>
+
+  <div class="tc"><div class="tc-head"><div class="tc-title">Tipos de operación — Canal recomendado por producto</div></div>
+  <table><thead><tr><th>Tipo inmueble</th><th>Operación</th><th>Canal ideal</th><th>Ganancia estimada</th><th>Dificultad</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Depto 2 amb. alquiler TUC</strong></td><td>Acercador / Asoc.</td><td><span class="canal-tag c-fb-tag">FB</span></td><td style="font-family:var(--font-m);color:var(--green)">$150K–$300K</td><td><span class="badge b-green">Fácil</span></td></tr>
+    <tr><td><strong>Casa venta (U$D 40K–80K)</strong></td><td>Acercador / Asoc.</td><td><span class="canal-tag c-fb-tag">FB</span></td><td style="font-family:var(--font-m);color:var(--green)">U$D 1.200–3.200</td><td><span class="badge b-amber">Media</span></td></tr>
+    <tr><td><strong>Local comercial alquiler</strong></td><td>Asociado inmob.</td><td><span class="canal-tag c-fb-tag">FB</span></td><td style="font-family:var(--font-m);color:var(--green)">$300K–$600K</td><td><span class="badge b-amber">Media</span></td></tr>
+    <tr><td><strong>Alquiler temporario</strong></td><td>Gestión Airbnb/FB</td><td><span class="canal-tag c-fb-tag">FB</span> <span class="canal-tag c-ig-tag">IG</span></td><td style="font-family:var(--font-m);color:var(--green)">10–20% por noche</td><td><span class="badge b-green">Fácil</span></td></tr>
+    <tr><td><strong>Lote/terreno venta</strong></td><td>Intermediario</td><td><span class="canal-tag c-fb-tag">FB</span></td><td style="font-family:var(--font-m);color:var(--green)">$200K–$800K</td><td><span class="badge b-amber">Media</span></td></tr>
+  </tbody></table></div>
+</div>
+
+<!-- ════ VISTA: ML LIVE ════ -->
+<div id="view-ml-live" class="view">
+  <div class="page-header"><div><div class="page-title">Búsqueda ML en Vivo</div><div class="page-sub">Datos reales de Mercado Libre Argentina · Precios actualizados ahora</div></div><span class="badge b-red" style="margin-top:4px;">● LIVE</span></div>
+
+  <div class="alert-box info" style="margin-top:14px;">
+    <span style="font-size:15px;flex-shrink:0;">🌐</span>
+    <div><strong style="color:var(--fb)">API Mercado Libre:</strong> Esta búsqueda consulta la API pública oficial de ML Argentina en tiempo real. Los precios y resultados son exactos al momento de la búsqueda. Usá esto para verificar precios antes de publicar.</div>
+  </div>
+
+  <div class="ml-search-bar">
+    <input class="ml-search-input" id="ml-query" placeholder="Ej: auriculares bluetooth, scooter electrico, generador 3000w..." value="auriculares bluetooth" onkeypress="if(event.key==='Enter')doMLSearch()">
+    <button class="btn-ml" onclick="doMLSearch()">🔍 Buscar en ML</button>
+  </div>
+
+  <div class="cat-tabs" style="margin-top:10px;">
+    <button class="ct ae" onclick="quickMLSearch('auriculares bluetooth')">⚡ Auriculares</button>
+    <button class="ct" onclick="quickMLSearch('mochila escolar')">🧸 Mochila</button>
+    <button class="ct am" onclick="quickMLSearch('scooter electrico')">🛵 Scooter</button>
+    <button class="ct amq" onclick="quickMLSearch('generador electrico 3000w')">⚙️ Generador</button>
+    <button class="ct ai" onclick="quickMLSearch('bicicleta electrica')">🚲 Bici eléctrica</button>
+    <button class="ct ah" onclick="quickMLSearch('lampara led mesa')">🏠 Lámpara</button>
+    <button class="ct" onclick="quickMLSearch('soldadora inverter')">🔧 Soldadora</button>
+  </div>
+
+  <div id="ml-status" style="margin-top:12px;font-size:12px;color:var(--muted);font-family:var(--font-m);"></div>
+  <div id="ml-stats" style="display:none;margin-top:8px;" class="metrics-row"></div>
+  <div id="ml-results" style="display:flex;flex-direction:column;gap:8px;margin-top:14px;"></div>
+</div>
+
+<!-- ════ VISTA: ASESOR IA ════ -->
+<div id="view-asistente" class="view">
+  <div class="page-header"><div><div class="page-title">Asesor IA de Negocios</div><div class="page-sub">Especialista en FB · ML · IG · Todas las categorías · Tucumán · Sin capital</div></div></div>
+  <div class="ai-card">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:9px;"><div style="width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite;"></div><span style="font-family:var(--font-m);font-size:10px;color:var(--green)">ASESOR IA · Claude Sonnet</span></div>
+      <button class="btn-ghost" onclick="clearChat()">Limpiar</button>
+    </div>
+    <div class="ai-msgs" id="main-chat-msgs">
+      <div><div class="msg-lbl">Asesor IA</div><div class="msg ai">Hola 👋 Soy tu asesor especializado para operar en <strong>Facebook, Mercado Libre e Instagram</strong> desde Tucumán.<br><br>Manejo todas tus categorías:<br>• 📦 Pequeños: Electrónica, Ropa, Hogar, Juguetes<br>• 🛵 Movilidad eléctrica<br>• ⚙️ Maquinaria y generadores<br>• 🏢 Inmuebles<br><br>Y todos los modos de operación: <strong>comisionista, revendedor, dropshipping, intermediario</strong>.<br><br>¿Cuál es tu próximo movimiento?</div></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-input" id="main-chat-input" placeholder="Preguntá sobre cualquier categoría, canal, precio o estrategia..." onkeypress="if(event.key==='Enter')mainChatSend()">
+      <button class="btn" onclick="mainChatSend()">Enviar →</button>
+    </div>
+  </div>
+  <div class="quick-btns">
+    <button class="btn-ghost" onclick="quickMain('Cómo empiezo hoy como comisionista de scooters eléctricos en Tucumán sin capital?')">Comisionista scooters</button>
+    <button class="btn-ghost" onclick="quickMain('Qué canal uso para vender generadores: Facebook o Mercado Libre? Por qué?')">FB vs ML para generadores</button>
+    <button class="btn-ghost" onclick="quickMain('Cómo actuar como intermediario inmobiliario en Tucumán sin matrícula?')">Intermediario inmuebles</button>
+    <button class="btn-ghost" onclick="quickMain('Dame un plan de 30 días para llegar a $500.000 pesos de ganancia desde Tucumán empezando sin capital')">Plan $500K en 30 días</button>
+    <button class="btn-ghost" onclick="quickMain('Qué productos puedo vender en Instagram vs Facebook vs Mercado Libre según la categoría?')">Canal por categoría</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div style="font-family:var(--font-d);font-size:17px;font-weight:700;" id="modal-title"></div><div style="color:var(--muted);font-size:11px;margin-top:2px;" id="modal-sub"></div></div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ═══════ NAVEGACIÓN ═══════
+function showView(id,el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  const inits={demanda:initDemanda,calculadora:initCalc,competencia:initComp,ml_live:()=>{}};
+  setTimeout(()=>(inits[id.replace('-','_')]||function(){})(),80);
+}
+
+// ═══════ HEATMAP DATA ═══════
+const HM={
+  elec:{label:'⚡ Electrónica',c:'#22d3ee',v:[70,65,72,68,75,80,85,82,78,90,95,98]},
+  ropa:{label:'👗 Ropa',c:'#f472b6',v:[55,52,88,85,74,68,62,58,72,76,82,86]},
+  hogar:{label:'🏠 Hogar',c:'#fbbf24',v:[72,68,76,78,68,62,60,65,72,76,80,82]},
+  juguetes:{label:'🧸 Juguetes',c:'#a78bfa',v:[48,45,52,50,55,60,65,68,70,78,95,98]},
+  movilidad:{label:'🛵 Movilidad Eléct.',c:'#22d3ee',v:[65,60,72,78,82,68,55,60,74,80,76,70]},
+  maquinaria:{label:'⚙️ Maquinaria',c:'#fb923c',v:[72,70,74,78,80,82,84,86,82,78,76,74]},
+  inmuebles:{label:'🏢 Inmuebles',c:'#4ade80',v:[62,60,68,74,78,80,76,72,70,68,65,62]},
+};
+const MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function heatBg(v,hex){
+  if(v<55)return'rgba(26,40,26,0.95)';
+  const a=Math.min(1,((v-55)/45)*0.85+0.15);
+  return hex+(Math.round(a*255)).toString(16).padStart(2,'0');
+}
+function renderHeatmap(mode){
+  const cats=mode==='all'?Object.values(HM):[HM[mode]].filter(Boolean);
+  if(!cats.length)return;
+  let h='<table class="hm-table"><tr><th></th>'+MONTHS.map(m=>`<th class="hm-month">${m}</th>`).join('')+'</tr>';
+  cats.forEach(cat=>{
+    h+=`<tr><td class="hm-cat-lbl">${cat.label}</td>`;
+    cat.v.forEach((v,i)=>{
+      const bg=heatBg(v,cat.c);
+      const tc=v>=68?'rgba(0,0,0,0.85)':'#6b7191';
+      const now=i===2;
+      h+=`<td style="padding:2px;"><div class="hm-cell" style="background:${bg};color:${tc};${now?'outline:2px solid rgba(255,255,255,.3);font-weight:700;':''}">${v}</div></td>`;
+    });
+    h+='</tr>';
+  });
+  document.getElementById('heatmap-main').innerHTML=h+'</table>';
+}
+
+// ═══════ WEEKLY CHART ═══════
+let chartW;
+const WD={
+  elec:{label:'Electrónica',c:'#22d3ee',d:[420,380,410,460,520,580,640,590,700,780,840,920]},
+  ropa:{label:'Ropa',c:'#f472b6',d:[380,420,890,850,740,660,600,560,720,760,820,860]},
+  hogar:{label:'Hogar',c:'#fbbf24',d:[540,510,580,600,520,480,460,500,540,580,620,640]},
+  juguetes:{label:'Juguetes',c:'#a78bfa',d:[340,320,380,360,400,440,480,520,540,600,720,780]},
+  movilidad:{label:'Movilidad',c:'#22d3ee',d:[280,260,320,380,440,380,300,320,400,460,420,380]},
+  maquinaria:{label:'Maquinaria',c:'#fb923c',d:[480,460,500,520,540,560,580,600,560,520,500,480]},
+  inmuebles:{label:'Inmuebles',c:'#4ade80',d:[240,220,280,320,360,380,350,320,300,280,260,250]},
+};
+function renderWeekly(cat){
+  const canvas=document.getElementById('chart-weekly');if(!canvas)return;
+  if(chartW){chartW.destroy();chartW=null;}
+  const lbls=['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12'];
+  let ds,title;
+  if(cat==='all'){
+    ds=Object.values(WD).map(d=>({label:d.label,data:d.d,borderColor:d.c,backgroundColor:'transparent',tension:.4,fill:false,pointRadius:2,pointBackgroundColor:d.c,borderWidth:1.5}));
+    title='Tendencia semanal — Todas las categorías';
+  } else {
+    const d=WD[cat]||WD.elec;
+    ds=[{label:d.label,data:d.d,borderColor:d.c,backgroundColor:d.c+'20',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:d.c}];
+    title=`Tendencia semanal — ${d.label}`;
+  }
+  document.getElementById('weekly-title').textContent=title;
+  chartW=new Chart(canvas,{type:'line',data:{labels:lbls,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:cat==='all',position:'bottom',labels:{color:'#6b7191',font:{size:9},boxWidth:8,padding:8}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7191',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7191',font:{size:10}}}}}});
+}
+function setCatD(cat,el){
+  document.querySelectorAll('#view-demanda .ct').forEach(t=>{t.className='ct';});
+  const cls={all:'aa',elec:'ae',ropa:'ar',hogar:'ah',juguetes:'aj',movilidad:'am',maquinaria:'amq',inmuebles:'ai'};
+  if(el)el.classList.add(cls[cat]||'aa');
+  renderHeatmap(cat);renderWeekly(cat);
+}
+function renderDayHeat(){
+  const s=[58,55,64,86,91,78,74];
+  const cl=['rgba(74,222,128,.1)','rgba(74,222,128,.1)','rgba(74,222,128,.3)','rgba(74,222,128,.7)','rgba(74,222,128,.9)','rgba(74,222,128,.58)','rgba(74,222,128,.48)'];
+  const tc=['#6b7191','#6b7191','#6b7191','rgba(0,0,0,.8)','rgba(0,0,0,.85)','rgba(0,0,0,.8)','rgba(0,0,0,.75)'];
+  const el=document.getElementById('day-heat');if(!el)return;
+  el.innerHTML=s.map((v,i)=>`<div style="height:30px;border-radius:4px;background:${cl[i]};color:${tc[i]};display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--font-m);">${v}</div>`).join('');
+}
+function renderTimeBars(){
+  const f=[['9h–13h',42],['13h–17h',55],['17h–20h',68],['20h–23h',94],['23h+',28]];
+  const el=document.getElementById('time-bars');if(!el)return;
+  el.innerHTML=f.map(([l,v])=>{
+    const c=v>=85?'var(--green)':v>=60?'var(--amber)':'var(--muted)';
+    return`<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:10px;font-family:var(--font-m);color:var(--muted);min-width:65px;">${l}</span><div class="dbar-bg" style="flex:1;"><div class="dbar-fill" style="width:${v}%;background:${c};"></div></div><span style="font-size:10px;font-family:var(--font-m);color:${c};min-width:24px;text-align:right;">${v}</span></div>`;
+  }).join('');
+}
+function initDemanda(){renderHeatmap('all');renderWeekly('all');renderDayHeat();renderTimeBars();}
+
+// ═══════ COMPETENCIA ═══════
+let chartComp;
+const COMP={
+  elec:{t:'Auriculares BT',cnls:'<span class="canal-tag c-fb-tag">FB</span> <span class="canal-tag c-ml-tag">ML</span>',labels:['$10k-14k','$14k-16k','$16k-18k','$18k-20k','$20k+'],data:[4,18,42,30,8],
+    rows:[{r:'🥇',n:'Top vendedor FB',d:'42 likes · 1h',p:'$16.500',c:'var(--red)'},{r:'🥈',n:'Vendedor #2',d:'28 likes · ayer',p:'$17.000',c:'var(--amber)'},{r:'📍',n:'Tu precio',d:'Envío gratis + garantía 30d',p:'$17.800',c:'var(--green)'}],
+    st:'Publicá a $17.800 en FB y ML. Respondé en menos de 1h. Pubicá jueves 21h.'},
+  ropa:{t:'Remeras Mujer',cnls:'<span class="canal-tag c-fb-tag">FB</span>',labels:['$4k-6k','$6k-8k','$8k-10k','$10k+'],data:[12,38,60,20],
+    rows:[{r:'🥇',n:'Top vendedora',d:'88 likes · activa',p:'$7.000',c:'var(--red)'},{r:'🥈',n:'#2',d:'45 likes',p:'$7.500',c:'var(--amber)'},{r:'📍',n:'Tu precio',d:'Con foto modelo',p:'$8.200',c:'var(--green)'}],
+    st:'Canal ideal: FB. Foto con modelo, fondo limpio. Publicá en grupos mujeres TUC.'},
+  hogar:{t:'Lámparas LED',cnls:'<span class="canal-tag c-fb-tag">FB</span>',labels:['$3k-5k','$5k-7k','$7k-9k','$9k+'],data:[8,28,38,14],
+    rows:[{r:'🥇',n:'Top vendedor',d:'31 likes',p:'$5.500',c:'var(--red)'},{r:'🥈',n:'#2',d:'18 likes',p:'$6.500',c:'var(--amber)'},{r:'📍',n:'Tu precio',d:'Garantía + entrega TUC',p:'$7.600',c:'var(--green)'}],
+    st:'Poca competencia. FB preferido para hogar/deco local.'},
+  juguetes:{t:'Mochilas Escolares',cnls:'<span class="canal-tag c-fb-tag">FB</span> <span class="canal-tag c-ml-tag">ML</span>',labels:['$12k-16k','$16k-20k','$20k-24k','$24k+'],data:[6,22,48,20],
+    rows:[{r:'🥇',n:'Top FB',d:'95 likes · temporada',p:'$19.000',c:'var(--red)'},{r:'🥈',n:'#2',d:'62 likes',p:'$20.500',c:'var(--amber)'},{r:'📍',n:'Tu precio',d:'Entrega TUC',p:'$22.000',c:'var(--green)'}],
+    st:'PICO AHORA. Publicá en FB y ML. Precio competitivo en el centro del rango.'},
+  movilidad:{t:'Scooters Eléctricos',cnls:'<span class="canal-tag c-ml-tag">ML</span>',labels:['$200k-300k','$300k-400k','$400k-500k','$500k+'],data:[14,36,42,18],
+    rows:[{r:'🥇',n:'Top ML',d:'120 ventas · Full',p:'$310.000',c:'var(--red)'},{r:'🥈',n:'#2',d:'88 ventas',p:'$360.000',c:'var(--amber)'},{r:'📍',n:'Tu precio',d:'Stock o dropshipping',p:'$380.000',c:'var(--green)'}],
+    st:'Canal ideal: Mercado Libre Full. Los compradores de movilidad buscan en ML con garantía.'},
+  maquinaria:{t:'Generadores 3000W',cnls:'<span class="canal-tag c-ml-tag">ML</span>',labels:['$400k-500k','$500k-650k','$650k-800k','$800k+'],data:[8,42,38,12],
+    rows:[{r:'🥇',n:'Top ML',d:'240 ventas · Full',p:'$520.000',c:'var(--red)'},{r:'🥈',n:'#2',d:'180 ventas',p:'$580.000',c:'var(--amber)'},{r:'📍',n:'Tu precio',d:'Comisionista o revendedor',p:'$620.000',c:'var(--green)'}],
+    st:'ML es el canal dominante para maquinaria. Publicación "Full" = mayor visibilidad. Comisión ML ~6%.'},
+};
+function setCompCat(cat,el){
+  document.querySelectorAll('#view-competencia .ct').forEach(t=>{t.className='ct';});
+  const cls={elec:'ae',ropa:'ar',hogar:'ah',juguetes:'aj',movilidad:'am',maquinaria:'amq'};
+  if(el)el.classList.add(cls[cat]||'ae');
+  const d=COMP[cat]||COMP.elec;
+  document.getElementById('comp-title').textContent=d.t;
+  document.getElementById('comp-canal-badges').innerHTML=d.cnls;
+  document.getElementById('comp-list').innerHTML=d.rows.map(r=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);"><div><div style="font-weight:500;font-size:13px;">${r.r} ${r.n}</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">${r.d}</div></div><div style="font-family:var(--font-m);font-size:13px;font-weight:500;color:${r.c};">${r.p}</div></div>`).join('')+'<div style="height:4px;"></div>';
+  document.getElementById('comp-strategy').innerHTML=`<div class="strat-box" style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.18);">💡 <strong style="color:var(--green)">Estrategia:</strong> ${d.st}</div>`;
+  const canvas=document.getElementById('chart-comp');if(!canvas)return;
+  if(chartComp){chartComp.destroy();chartComp=null;}
+  chartComp=new Chart(canvas,{type:'bar',data:{labels:d.labels,datasets:[{data:d.data,backgroundColor:d.data.map((_,i)=>i===Math.floor(d.data.length/2)?'rgba(24,119,242,.65)':'rgba(24,119,242,.25)'),borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#6b7191',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7191',font:{size:10}}}}}});
+}
+function initComp(){setCompCat('elec',null);}
+
+// ═══════ CALCULADORA ═══════
+const PRESETS={
+  auriculares:{c:8500,v:18500,env:0,com:0,otros:150,modo:'rev',canal:'0'},
+  mochila:{c:9000,v:22000,env:0,com:0,otros:200,modo:'rev',canal:'0'},
+  scooter:{c:290000,v:480000,env:0,com:5,otros:0,modo:'com',canal:'6'},
+  generador:{c:0,v:620000,env:0,com:6,otros:0,modo:'com',canal:'6'},
+  inmueble:{c:0,v:5000000,env:0,com:3,otros:0,modo:'int',canal:'0'},
+};
+function loadPreset(k){
+  const p=PRESETS[k];
+  document.getElementById('c-costo').value=p.c;
+  document.getElementById('c-venta').value=p.v;
+  document.getElementById('c-envio').value=p.env;
+  document.getElementById('c-comision-pct').value=p.com;
+  document.getElementById('c-otros').value=p.otros;
+  document.getElementById('c-modo').value=p.modo;
+  document.getElementById('c-canal').value=p.canal;
+  calcular();
+}
+let chartSim;
+function calcular(){
+  const costo=parseFloat(document.getElementById('c-costo').value)||0;
+  const venta=parseFloat(document.getElementById('c-venta').value)||0;
+  const envio=parseFloat(document.getElementById('c-envio').value)||0;
+  const comPct=parseFloat(document.getElementById('c-comision-pct').value)||0;
+  const otros=parseFloat(document.getElementById('c-otros').value)||0;
+  const canalPct=parseFloat(document.getElementById('c-canal').value)||0;
+  const modo=document.getElementById('c-modo').value;
+
+  let ganancia,costoTotal,comisionCanal,label;
+  comisionCanal=venta*(canalPct/100);
+
+  if(modo==='com'||modo==='int'){
+    // Comisionista o intermediario: ganancia = % del precio de venta
+    ganancia=venta*(comPct/100)-comisionCanal-envio-otros;
+    costoTotal=envio+otros+comisionCanal;
+    label='💼 Comisionista/Intermediario';
+  } else if(modo==='drop'){
+    ganancia=venta-costo-comisionCanal-envio-otros;
+    costoTotal=costo+envio+otros+comisionCanal;
+    label='📦 Dropshipping';
+  } else {
+    ganancia=venta-costo-comisionCanal-envio-otros;
+    costoTotal=costo+envio+otros+comisionCanal;
+    label='🔄 Revendedor';
+  }
+  const margen=venta>0?(ganancia/venta*100):0;
+  const roi=(costo||1)>0?(ganancia/(costo||ganancia)*100):100;
+  const fmt=n=>'$'+Math.round(n).toLocaleString('es-AR');
+  document.getElementById('r-ganancia').textContent=fmt(ganancia);
+  document.getElementById('r-ganancia').style.color=ganancia>=0?'var(--green)':'var(--red)';
+  document.getElementById('r-margen').textContent=Math.round(margen)+'%';
+  document.getElementById('r-roi').textContent=Math.round(roi)+'%';
+  document.getElementById('r-costo-total').textContent=fmt(costoTotal);
+  document.getElementById('r-comision-canal').textContent=comisionCanal>0?fmt(comisionCanal):'$0';
+  document.getElementById('r-break').textContent=fmt(costoTotal);
+  document.getElementById('r-x1').textContent=fmt(ganancia);
+  document.getElementById('r-x5').textContent=fmt(ganancia*5);
+  document.getElementById('r-x10').textContent=fmt(ganancia*10);
+  document.getElementById('r-modo-badge').innerHTML=`<span style="font-size:11px;color:var(--muted);font-family:var(--font-m);">${label}</span>`;
+  let sem='';
+  if(margen>=40)sem=`<div class="strat-box" style="background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);">✅ <strong style="color:var(--green)">Excelente</strong> — Margen ${Math.round(margen)}%</div>`;
+  else if(margen>=20)sem=`<div class="strat-box" style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);">⚠️ <strong style="color:var(--amber)">Viable</strong> — Margen ${Math.round(margen)}%. Mejorá el precio de compra.</div>`;
+  else if(margen>0)sem=`<div class="strat-box" style="background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);">❌ <strong style="color:var(--red)">Margen bajo</strong> — ${Math.round(margen)}%. Revisá la operación.</div>`;
+  document.getElementById('r-semaforo').innerHTML=sem;
+  setTimeout(renderSimChart,50);
+}
+function renderSimChart(){
+  const canvas=document.getElementById('chart-sim');if(!canvas)return;
+  if(chartSim){chartSim.destroy();chartSim=null;}
+  const costo=parseFloat(document.getElementById('c-costo').value)||0;
+  const venta=parseFloat(document.getElementById('c-venta').value)||0;
+  const envio=parseFloat(document.getElementById('c-envio').value)||0;
+  const comPct=parseFloat(document.getElementById('c-comision-pct').value)||0;
+  const otros=parseFloat(document.getElementById('c-otros').value)||0;
+  const canalPct=parseFloat(document.getElementById('c-canal').value)||0;
+  const modo=document.getElementById('c-modo').value;
+  const comisionCanal=venta*(canalPct/100);
+  let gan;
+  if(modo==='com'||modo==='int') gan=venta*(comPct/100)-comisionCanal-envio-otros;
+  else gan=venta-costo-comisionCanal-envio-otros;
+  const data=[1,2,3,4,5,6,7,8,9,10].map(n=>Math.round(gan*n));
+  chartSim=new Chart(canvas,{type:'bar',data:{labels:['1','2','3','4','5','6','7','8','9','10'],datasets:[{data,backgroundColor:data.map(v=>v>=0?'rgba(74,222,128,.5)':'rgba(248,113,113,.5)'),borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#6b7191',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7191',font:{size:10},callback:v=>{if(Math.abs(v)>=1000000)return'$'+(v/1000000).toFixed(1)+'M';if(Math.abs(v)>=1000)return'$'+(v/1000).toFixed(0)+'K';return'$'+v;}}}}}});
+}
+function initCalc(){calcular();renderSimChart();}
+
+// ═══════ ML LIVE API ═══════
+async function doMLSearch(){
+  const q=document.getElementById('ml-query').value.trim();
+  if(!q)return;
+  const status=document.getElementById('ml-status');
+  const results=document.getElementById('ml-results');
+  const stats=document.getElementById('ml-stats');
+  status.innerHTML='<div class="loading-dots"><span></span><span></span><span></span></div> Consultando Mercado Libre Argentina...';
+  results.innerHTML='';stats.style.display='none';
+  try{
+    // ML Public API — no auth required for search
+    const url=`https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(q)}&limit=12`;
+    const res=await fetch(url);
+    if(!res.ok)throw new Error('API error '+res.status);
+    const data=await res.json();
+    const items=data.results||[];
+    if(!items.length){status.innerHTML='<span style="color:var(--muted)">Sin resultados. Probá otra búsqueda.</span>';return;}
+    const prices=items.map(i=>i.price).filter(Boolean);
+    const avg=prices.reduce((a,b)=>a+b,0)/prices.length;
+    const min=Math.min(...prices);
+    const max=Math.max(...prices);
+    const fmt=n=>'$'+Math.round(n).toLocaleString('es-AR');
+    status.innerHTML=`<span style="color:var(--green);font-family:var(--font-m);font-size:11px;">✅ ${items.length} resultados de ML Argentina · Actualizado ahora</span>`;
+    stats.style.display='grid';
+    stats.innerHTML=`
+      <div class="mc c-green" style="margin:0;"><div class="mc-label">Precio mínimo</div><div class="mc-value" style="color:var(--green);font-size:18px;">${fmt(min)}</div></div>
+      <div class="mc c-amber" style="margin:0;"><div class="mc-label">Precio promedio</div><div class="mc-value" style="color:var(--amber);font-size:18px;">${fmt(avg)}</div></div>
+      <div class="mc c-red" style="margin:0;"><div class="mc-label">Precio máximo</div><div class="mc-value" style="color:var(--red);font-size:18px;">${fmt(max)}</div></div>
+      <div class="mc c-cyan" style="margin:0;"><div class="mc-label">Resultados totales</div><div class="mc-value" style="color:var(--cyan);font-size:18px;">${data.paging?.total?.toLocaleString('es-AR')||'—'}</div></div>`;
+    results.innerHTML=items.map(item=>{
+      const thumb=item.thumbnail?item.thumbnail.replace('http:','https:'):'';
+      const sold=item.sold_quantity||0;
+      const cond=item.condition==='new'?'<span class="badge b-green">Nuevo</span>':'<span class="badge b-amber">Usado</span>';
+      const freeShip=item.shipping?.free_shipping?'<span class="badge b-blue">Envío gratis</span>':'';
+      return`<div class="ml-result-card" onclick="window.open('${item.permalink}','_blank')">
+        ${thumb?`<img class="ml-thumb" src="${thumb}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="ml-thumb"></div>'}
+        <div style="flex:1;min-width:0;">
+          <div class="ml-title">${item.title}</div>
+          <div class="ml-price">${fmt(item.price)}</div>
+          <div class="ml-meta" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">${cond}${freeShip}${sold>0?`<span class="badge b-purple">${sold} vendidos</span>`:''}</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;font-family:var(--font-m);">Ver →</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    status.innerHTML=`<span style="color:var(--red)">Error al consultar ML: ${e.message}. Revisá tu conexión o intentá de nuevo.</span>`;
+  }
+}
+function quickMLSearch(q){document.getElementById('ml-query').value=q;doMLSearch();}
+function searchML(q){showView('ml-live',null);document.querySelector('#nav-ml')&&document.querySelector('#nav-ml').classList.add('active');setTimeout(()=>{document.getElementById('ml-query').value=q;doMLSearch();},200);}
+
+// ═══════ MODALES ═══════
+const MODALS={
+  mochila:{title:'Mochila Escolar 🧸',sub:'PICO TEMPORADA · Back to School · Margen 59% · Canal: FB + ML',html:`<div class="alert-box warn"><span>⏰</span><div><strong style="color:var(--amber)">Pico máximo ahora.</strong> Publicá hoy. Demanda score 95/100.</div></div><div class="metrics-row" style="margin-top:12px;grid-template-columns:repeat(4,1fr);"><div class="mc c-green" style="margin:0;"><div class="mc-label">Compra</div><div class="mc-value" style="color:var(--green);font-size:18px;">$9.000</div></div><div class="mc c-fb" style="margin:0;"><div class="mc-label">Venta FB/ML</div><div class="mc-value" style="color:var(--fb);font-size:18px;">$22.000</div></div><div class="mc c-amber" style="margin:0;"><div class="mc-label">Margen</div><div class="mc-value" style="color:var(--amber);font-size:18px;">59%</div></div><div class="mc c-purple" style="margin:0;"><div class="mc-label">Prob. venta</div><div class="mc-value" style="color:var(--purple);font-size:18px;">92%</div></div></div><div style="margin-top:12px;"><div class="stat-pair"><span class="sp-lbl">Ganancia neta</span><span class="sp-val" style="color:var(--green)">$12.800</span></div><div class="stat-pair"><span class="sp-lbl">Modo recomendado</span><span class="sp-val">Revendedor con seña 50%</span></div><div class="stat-pair"><span class="sp-lbl">Dónde comprar</span><span class="sp-val">Once CABA $7K–$9K · ML mayor. $9.2K</span></div></div><div class="alert-box info" style="margin-top:10px;"><span>📱</span><div><strong style="color:var(--fb)">Título FB:</strong> "Mochila Escolar Grande Resistente — Entrego Tucumán 🎒"<br><strong style="color:var(--fb)">Título ML:</strong> "Mochila Escolar Resistente Gran Capacidad - Envío a Todo el País"</div></div>`},
+  scooter:{title:'Scooter Eléctrico 🛵',sub:'Alta demanda · Movilidad · Modo: Comisionista · Canal: ML',html:`<div class="metrics-row" style="margin-top:12px;grid-template-columns:repeat(4,1fr);"><div class="mc c-green" style="margin:0;"><div class="mc-label">Precio venta</div><div class="mc-value" style="color:var(--green);font-size:18px;">$480K</div></div><div class="mc c-amber" style="margin:0;"><div class="mc-label">Comisión 5%</div><div class="mc-value" style="color:var(--amber);font-size:18px;">$24.000</div></div><div class="mc c-purple" style="margin:0;"><div class="mc-label">Inv. propia</div><div class="mc-value" style="color:var(--purple);font-size:18px;">$0</div></div><div class="mc c-cyan" style="margin:0;"><div class="mc-label">Prob. venta</div><div class="mc-value" style="color:var(--cyan);font-size:18px;">82%</div></div></div><div class="alert-box success" style="margin-top:10px;"><span>✅</span><div><strong style="color:var(--green)">Estrategia sin capital:</strong> Visitá concesionarias de movilidad eléctrica en TUC. Acordá una comisión del 5–8% por cliente referido. Publicá en ML con fotos del local. Cuando te consulten, ponés en contacto directo y cobrás tu %.</div></div><div style="margin-top:10px;"><div class="stat-pair"><span class="sp-lbl">Canal ideal</span><span class="sp-val">Mercado Libre (Full)</span></div><div class="stat-pair"><span class="sp-lbl">Publicación Full ML</span><span class="sp-val">Mejor posición en búsqueda</span></div><div class="stat-pair"><span class="sp-lbl">Con 3 ventas/mes</span><span class="sp-val" style="color:var(--green)">$72.000/mes</span></div></div>`},
+  generador:{title:'Generador 3000W ⚙️',sub:'Demanda estable todo el año · Maquinaria · Canal: ML',html:`<div class="metrics-row" style="margin-top:12px;grid-template-columns:repeat(4,1fr);"><div class="mc c-green" style="margin:0;"><div class="mc-label">Precio venta</div><div class="mc-value" style="color:var(--green);font-size:18px;">$620K</div></div><div class="mc c-amber" style="margin:0;"><div class="mc-label">Comisión 6%</div><div class="mc-value" style="color:var(--amber);font-size:18px;">$37.200</div></div><div class="mc c-purple" style="margin:0;"><div class="mc-label">Saturación</div><div class="mc-value" style="color:var(--green);font-size:18px;">22%</div></div><div class="mc c-cyan" style="margin:0;"><div class="mc-label">Score</div><div class="mc-value" style="color:var(--cyan);font-size:18px;">84/100</div></div></div><div class="alert-box success" style="margin-top:10px;"><span>⚙️</span><div><strong style="color:var(--green)">Canal ideal: Mercado Libre.</strong> Los compradores de generadores buscan en ML por garantía y cuotas. Publicar como Full mejora visibilidad. Comisión ML ~6% ya incluida en tu precio.</div></div><div style="margin-top:10px;"><div class="stat-pair"><span class="sp-lbl">Modo sugerido</span><span class="sp-val">Comisionista o revendedor</span></div><div class="stat-pair"><span class="sp-lbl">Distribuidor</span><span class="sp-val">Veltri, Gamma, Bauker</span></div><div class="stat-pair"><span class="sp-lbl">Con 2 ventas/mes</span><span class="sp-val" style="color:var(--green)">$74.400/mes</span></div></div>`},
+  auriculares:{title:'Auriculares Bluetooth ⚡',sub:'Alta demanda estable · Electrónica · Canal: FB + ML',html:`<div class="metrics-row" style="margin-top:12px;grid-template-columns:repeat(4,1fr);"><div class="mc c-green" style="margin:0;"><div class="mc-label">Compra</div><div class="mc-value" style="color:var(--green);font-size:18px;">$8.500</div></div><div class="mc c-fb" style="margin:0;"><div class="mc-label">Venta</div><div class="mc-value" style="color:var(--fb);font-size:18px;">$18.500</div></div><div class="mc c-amber" style="margin:0;"><div class="mc-label">Margen</div><div class="mc-value" style="color:var(--amber);font-size:18px;">54%</div></div><div class="mc c-purple" style="margin:0;"><div class="mc-label">Prob. venta</div><div class="mc-value" style="color:var(--purple);font-size:18px;">87%</div></div></div><div style="margin-top:10px;"><div class="stat-pair"><span class="sp-lbl">Ganancia neta</span><span class="sp-val" style="color:var(--green)">$9.850</span></div><div class="stat-pair"><span class="sp-lbl">Con 5 ventas/sem.</span><span class="sp-val" style="color:var(--green)">$49.250/semana</span></div></div><div class="alert-box info" style="margin-top:10px;"><span>📱</span><div>Publicá en FB y ML. En ML usá "Nuevo · Envío gratis" para destacarte. En FB respondé en menos de 1h.</div></div>`},
+  depto:{title:'Depto 2 ambientes TUC 🏢',sub:'Intermediario/Acercador · Facebook Marketplace · Sin capital',html:`<div class="metrics-row" style="margin-top:12px;grid-template-columns:repeat(3,1fr);"><div class="mc c-green" style="margin:0;"><div class="mc-label">Comisión aprox.</div><div class="mc-value" style="color:var(--green);font-size:18px;">1 mes alq.</div><div class="mc-delta" style="color:var(--muted)">~$200K–$400K</div></div><div class="mc c-purple" style="margin:0;"><div class="mc-label">Inversión</div><div class="mc-value" style="color:var(--purple);font-size:18px;">$0</div></div><div class="mc c-amber" style="margin:0;"><div class="mc-label">Canal</div><div class="mc-value" style="color:var(--amber);font-size:18px;">FB + IG</div></div></div><div class="alert-box warn" style="margin-top:10px;"><span>⚠️</span><div>Para cobrar comisión inmobiliaria formalmente se necesita matrícula. Sin ella podés actuar como "acercador" y recibir un honorario acordado con el propietario. Consultá con un profesional.</div></div><div class="alert-box info" style="margin-top:8px;"><span>💡</span><div><strong style="color:var(--fb)">Cómo arrancar:</strong> Puteá en grupos de FB "Alquiler Tucumán", conseguí propietarios que quieren alquilar, publicá vos la propiedad con buenas fotos. Acordá el % con el dueño. FB e IG son los mejores canales para alquileres locales en TUC.</div></div>`},
+  lampara:{title:'Lámpara LED Mesa 🏠',sub:'Baja competencia · Hogar & Deco · Dropshipping · FB',html:`<div class="metrics-row" style="margin-top:12px;grid-template-columns:repeat(4,1fr);"><div class="mc c-green" style="margin:0;"><div class="mc-label">Compra</div><div class="mc-value" style="color:var(--green);font-size:18px;">$3.800</div></div><div class="mc c-fb" style="margin:0;"><div class="mc-label">Venta</div><div class="mc-value" style="color:var(--fb);font-size:18px;">$7.600</div></div><div class="mc c-amber" style="margin:0;"><div class="mc-label">Margen</div><div class="mc-value" style="color:var(--amber);font-size:18px;">50%</div></div><div class="mc c-green" style="margin:0;"><div class="mc-label">Saturación</div><div class="mc-value" style="color:var(--green);font-size:18px;">30%</div></div></div><div style="margin-top:10px;"><div class="stat-pair"><span class="sp-lbl">Modo ideal</span><span class="sp-val">Dropshipping o revendedor</span></div></div><div class="alert-box info" style="margin-top:10px;"><span>🏠</span><div>Canal ideal: Facebook. Poca competencia en TUC. Publicá en grupos deco/hogar locales. Podés ser referente de este nicho rápidamente.</div></div>`},
+};
+function openModal(id){
+  const d=MODALS[id];if(!d)return;
+  document.getElementById('modal-title').textContent=d.title;
+  document.getElementById('modal-sub').textContent=d.sub;
+  document.getElementById('modal-content').innerHTML=d.html;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+// ═══════ IA CHAT ═══════
+const SYSTEM=`Sos un asesor experto en comercio electrónico y negocios desde Argentina, especializado en Tucumán.
+
+El usuario opera en estos canales: Facebook Marketplace, Mercado Libre, Instagram.
+Sus categorías: Electrónica, Ropa, Hogar, Juguetes/Bebés, Movilidad Eléctrica, Maquinaria/Generadores, Inmuebles.
+Sus modos de operación: Comisionista, Revendedor, Dropshipping, Intermediario (según el producto).
+Capital inicial: $0 — usa seña, comisiones, o dropshipping.
+
+Cuando respondas siempre indicá:
+- Qué canal usar (FB/ML/IG) y por qué según el producto
+- Qué modo de operación conviene
+- Precios en $ ARS actuales
+- Margen o comisión estimada
+- Pasos concretos para arrancar hoy
+
+Formato: emojis, **negrita**, bullets. Máximo 350 palabras. Sé concreto y accionable.`;
+
+const hist=[];
+async function mainChatSend(){
+  const input=document.getElementById('main-chat-input');
+  const msgs=document.getElementById('main-chat-msgs');
+  const txt=input.value.trim();if(!txt)return;
+  input.value='';addMsg(msgs,'user',txt);hist.push({role:'user',content:txt});
+  const t=addTyping(msgs);
+  const reply=await callAI(hist,SYSTEM);
+  t.remove();addMsg(msgs,'ai',reply);hist.push({role:'assistant',content:reply});
+}
+function quickMain(txt){document.getElementById('main-chat-input').value=txt;mainChatSend();}
+function clearChat(){hist.length=0;document.getElementById('main-chat-msgs').innerHTML='<div><div class="msg-lbl">Asesor IA</div><div class="msg ai">Chat reiniciado. ¿En qué te ayudo?</div></div>';}
+function addMsg(c,r,t){
+  const d=document.createElement('div');
+  d.innerHTML=`<div class="msg-lbl">${r==='ai'?'Asesor IA':'Vos'}</div><div class="msg ${r}">${t.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function addTyping(c){
+  const d=document.createElement('div');d.id='typing-ind';
+  d.innerHTML='<div class="msg ai"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
+}
+async function callAI(messages,system){
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system,messages})});
+    const data=await res.json();
+    return data.content?.[0]?.text||'Sin respuesta.';
+  }catch(e){return 'Error de conexión. Verificá tu conexión a internet.';}
+}
+
+// INIT
+setTimeout(()=>{initDemanda();calcular();},300);
+</script>
+</body>
+</html>
